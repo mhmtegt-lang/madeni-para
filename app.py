@@ -1,122 +1,112 @@
 import streamlit as st
 
 # --- Sayfa Ayarları ---
-st.set_page_config(page_title="Para ve Kesirler", page_icon="🪙")
+st.set_page_config(page_title="Para Kumbarası", page_icon="🪙", layout="centered")
 
-# --- CSS (Tamamen Yenilendi) ---
+# --- CSS (Paraları Kutunun İçine Alan Tasarım) ---
 st.markdown("""
 <style>
-    /* Sayfa Arka Planı ve Genel Font */
-    .main { background-color: #1a202c; color: white; }
-    
-    /* Kumbara Kutusu: Okunmayan beyazlık silindi, koyu ve şık bir mavi yapıldı */
-    .kumbara-kutusu {
-        background-color: #2d3748; /* Koyu gri/mavi */
-        border: 3px dashed #63b3ed;
-        border-radius: 20px;
-        padding: 30px;
-        text-align: center;
-        color: #ebf8ff !important; /* Çok açık mavi/beyaz yazı - Koyu zeminde harika okunur */
+    /* Ana Kumbara Kutusu */
+    .kumbara-alani {
+        background-color: #1e293b; /* Koyu, şık bir zemin */
+        border: 4px dashed #64748b;
+        border-radius: 24px;
+        padding: 20px;
         min-height: 300px;
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-    }
-    .kumbara-kutusu h3, .kumbara-kutusu p {
-        color: #ebf8ff !important;
-        margin-bottom: 10px;
+        display: flex;
+        flex-wrap: wrap; /* Paraların sığmayınca alt satıra geçmesini sağlar */
+        align-content: flex-start;
+        justify-content: center;
+        gap: 15px; /* Paralar arası boşluk */
+        box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
     }
 
-    /* Madeni Paralar */
-    .madeni-para {
-        width: 70px; height: 70px;
-        background: linear-gradient(135deg, #ecc94b, #b7791f);
+    /* Kutu İçindeki Madeni Para */
+    .kutu-ici-para {
+        width: 65px; height: 65px;
+        background: linear-gradient(135deg, #fbbf24, #d97706);
         border-radius: 50%;
         display: flex; flex-direction: column;
         align-items: center; justify-content: center;
-        font-weight: bold; color: #2d3748;
+        font-weight: bold; color: #1e293b;
         border: 2px solid #fff;
-        margin: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        font-size: 14px;
+        animation: dusme 0.3s ease-out; /* Para atılınca hafif düşme efekti */
     }
 
-    /* Hata ve Başarı Mesajları */
-    .hata-mesaji {
-        background-color: #feb2b2; color: #9b2c2c;
-        padding: 10px; border-radius: 10px; font-weight: bold;
+    @keyframes dusme {
+        0% { transform: translateY(-50px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
     }
-    .basari-mesaji {
-        background-color: #9ae6b4; color: #22543d;
-        padding: 10px; border-radius: 10px; font-weight: bold;
+
+    .durum-metni {
+        text-align: center; color: #f1f5f9; font-size: 1.2rem; margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Veri ve Hafıza ---
+# --- Hafıza Yönetimi ---
+if 'para_adedi' not in st.session_state: st.session_state.para_adedi = 0
+if 'secili_para' not in st.session_state: st.session_state.secili_para = "25 Kr"
+
+# --- Veri ---
 paralar = {"1 TL": 100, "50 Kr": 50, "25 Kr": 25, "10 Kr": 10, "5 Kr": 5, "1 Kr": 1}
 
-if 'adet' not in st.session_state: st.session_state.adet = 0
-if 'eski_para' not in st.session_state: st.session_state.eski_para = "25 Kr"
-
 def main():
-    st.title("🪙 Para Biriktirme Oyunu")
+    st.title("🪙 İnteraktif Kumbara")
     
-    # Seçim ekranı
-    secim = st.selectbox("Para Türü:", list(paralar.keys()), index=2)
+    secim = st.sidebar.selectbox("Kutuya atılacak parayı seç:", list(paralar.keys()), index=2)
     deger = paralar[secim]
 
-    # Para türü değişirse kumbarayı boşalt
-    if secim != st.session_state.eski_para:
-        st.session_state.adet = 0
-        st.session_state.eski_para = secim
+    # Para türü değişirse sıfırla
+    if secim != st.session_state.secili_para:
+        st.session_state.para_adedi = 0
+        st.session_state.secili_para = secim
         st.rerun()
 
-    toplam = st.session_state.adet * deger
+    toplam = st.session_state.para_adedi * deger
 
-    # Sol Panel: Kontroller | Sağ Panel: Kumbara
-    col_ctrl, col_box = st.columns([1, 2])
-
-    with col_ctrl:
-        st.write("### İşlemler")
+    # --- KONTROL BUTONLARI ---
+    col1, col2, col3 = st.columns([1,1,1])
+    with col1:
         if st.button("Kutuya At ➕", use_container_width=True):
-            st.session_state.adet += 1
+            st.session_state.para_adedi += 1
             st.rerun()
-            
-        if st.button("Son Parayı Sil ➖", use_container_width=True, type="secondary"):
-            if st.session_state.adet > 0:
-                st.session_state.adet -= 1
+    with col2:
+        if st.button("Geri Al ➖", use_container_width=True):
+            if st.session_state.para_adedi > 0:
+                st.session_state.para_adedi -= 1
                 st.rerun()
-        
-        st.metric("Şu anki Toplam", f"{toplam} Kr")
-        st.write(f"Hedef: **100 Kr**")
-
-    with col_box:
-        # KUTU BAŞLANGICI
-        st.markdown('<div class="kumbara-kutusu">', unsafe_allow_html=True)
-        
-        if toplam == 0:
-            st.markdown("<h3>Kumbara Boş</h3><p>Para ekleyerek 1 TL yapalım!</p>", unsafe_allow_html=True)
-        elif toplam == 100:
-            st.markdown('<div class="basari-mesaji">🎉 TEBRİKLER! TAM 1 TL (100 Kr) OLDU!</div>', unsafe_allow_html=True)
-            st.balloons()
-        elif toplam > 100:
-            st.markdown(f'<div class="hata-mesaji">⚠️ EYVAH! FAZLA OLDU!<br>{toplam} Kr topladın. Lütfen "Sil" butonuna bas.</div>', unsafe_allow_html=True)
-        else:
-            kalan = 100 - toplam
-            st.markdown(f"<h3>Harika!</h3><p>1 TL için <b>{kalan} Kr</b> daha lazım.</p>", unsafe_allow_html=True)
-
-        # Paraların Görsel Dizilimi
-        para_alani = st.container()
-        with para_alani:
-            cols = st.columns(5)
-            for i in range(st.session_state.adet):
-                with cols[i % 5]:
-                    st.markdown(f'<div class="madeni-para">{deger}<br>Kr</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True) # KUTU BİTİŞİ
-
-    if st.session_state.adet > 0:
-        if st.button("🗑️ Kumbarayı Sıfırla"):
-            st.session_state.adet = 0
+    with col3:
+        if st.button("Boşalt 🗑️", use_container_width=True):
+            st.session_state.para_adedi = 0
             st.rerun()
+
+    st.divider()
+
+    # --- KUMBARA GÖRSELİ (İÇİNDEKİ PARALARLA) ---
+    # Durum mesajları
+    if toplam == 100:
+        st.success("Tebrikler! Tam 1 TL yaptın!")
+        st.balloons()
+    elif toplam > 100:
+        st.error(f"Eyvah! {toplam - 100} Kr fazla oldu. Geri almalısın.")
+    else:
+        st.info(f"Kutuda şu an {toplam} Kr var. 1 TL için {100 - toplam} Kr daha lazım.")
+
+    # HTML ile Kumbarayı ve İçindeki Paraları Oluşturma
+    para_htmls = "".join([f'<div class="kutu-ici-para">{deger}<br>Kr</div>' for _ in range(st.session_state.para_adedi)])
+    
+    st.markdown(f"""
+        <div class="kumbara-alani">
+            {para_htmls}
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Ödevdeki tabloyu hatırla (Küçük bir özet)
+    st.caption(f"Özet: {st.session_state.para_adedi} tane {secim} = {toplam}/100 TL")
 
 if __name__ == "__main__":
     main()
